@@ -1,26 +1,39 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="App">
+    <h1>Welcome to the game!</h1>
+    <div class="App-board">
+      <div v-for="die in dice" :key="die.id">
+        <DieComponent
+          :val="die.val"
+          :selected="die.selected"
+          :selectDie="selectDie"
+          :id="die.id"
+        />
+      </div>
+    </div>
+    <button @click.prevent="randomizeDice">Roll Dice</button>
+  </div>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+<script setup>
+import DieComponent from './components/DieComponent.vue'
+import useState from './composable/state'
+const { dice, selectDie, randomizeDice } = useState()
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+.App {
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+}
+
+.App-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
 }
 </style>
