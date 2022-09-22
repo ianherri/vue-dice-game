@@ -1,13 +1,13 @@
 <template>
   <div class="App">
-    <h1>Welcome to the game!</h1>
+    <h1>YAHTZEE!!</h1>
     <div v-if="initGame">
       <InitGame :startGame="startGame" />
     </div>
 
     <div v-else>
-      <p v-if="rolls > 0">{{ rolls }}</p>
-      <p>your turn: {{ activeUser.userId }}</p>
+      <p v-if="rolls > 0">Rolls: {{ rolls }}</p>
+      <p>Turn: {{ activeUser.userName }}</p>
       <div class="App-board">
         <div v-for="die in dice" :key="die.id">
           <DieComponent

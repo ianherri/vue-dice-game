@@ -40,9 +40,10 @@ function resetDice() {
   rolls.value = 0
 }
 
-function startGame(numPlayers) {
+function startGame(players) {
   const userTemp = {
     userId: '',
+    userName: '',
     active: true,
     score: [
       { id: 0, name: 'ones', score: 0, submitted: false, getScore: scoreOne },
@@ -108,15 +109,19 @@ function startGame(numPlayers) {
       },
     ],
   }
-  for (let i = 0; i < numPlayers; i++) {
+  console.log(players)
+  for (let i = 0; i < players.length; i++) {
     const randId = Math.floor(Math.random() * 1000000)
-    if (i === 0) {
-      game.value.push({ ...userTemp, userId: randId, active: true })
-    } else {
-      game.value.push({ ...userTemp, userId: randId, active: false })
-    }
+    game.value.push({
+      ...userTemp,
+      userId: randId,
+      active: true,
+      userName: players[i],
+    })
   }
   initGame.value = false
+
+  game.value[0].active = true
 
   resetDice()
 }
