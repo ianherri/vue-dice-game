@@ -15,6 +15,7 @@ import {
   scoreChance,
 } from './utilities'
 
+import router from '../router/index'
 // these are the dice used
 
 const game = ref([])
@@ -124,6 +125,8 @@ function startGame(players) {
   game.value[0].active = true
 
   resetDice()
+
+  router.push('/game')
 }
 
 function selectDie(id) {
