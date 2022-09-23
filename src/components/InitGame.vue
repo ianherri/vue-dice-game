@@ -1,11 +1,23 @@
 <template>
   <div>How many players are playing the game?</div>
-  <form>
-    <input placeholder="add a player" v-model="player" />
-    <button @click.prevent="addPlayer()">add player</button>
-    <br />
-    <br />
-    <button @click.prevent="props.startGame(players)">start!</button>
+  <form class="init-game-form">
+    <div class="add-player-input-container">
+      <input
+        class="add-player-input"
+        placeholder="add a player"
+        v-model="player"
+      />
+      <button class="secondary-button" @click.prevent="addPlayer()">
+        add player
+      </button>
+    </div>
+    <div>
+      Players:
+      <li v-for="player in players" :key="player.id">{{ player }}</li>
+    </div>
+    <button class="primary-button" @click.prevent="props.startGame(players)">
+      {{ players.length > 0 ? 'start game for ' + players.length : 'start' }}
+    </button>
   </form>
 </template>
 
@@ -17,29 +29,34 @@ const props = defineProps({
   startGame: Function,
 })
 
-const players = []
+const players = ref([])
 
 const player = ref('')
 
 function addPlayer() {
-  players.push(player.value)
-  console.log(players)
+  players.value.push(player.value)
   player.value = ''
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.Die {
-  box-sizing: border-box;
-  display: block;
-  text-align: center;
-  background-color: #f08080;
-  padding: 25px;
-  border-radius: 10px;
-  margin: 10px;
+.init-game-form {
+  display: flex;
+  flex-direction: column;
+  margin: 20px;
+  padding: 10px;
+  background-color: rgb(246, 246, 246);
 }
-.Die:hover {
-  cursor: pointer;
+
+.add-player-input {
+  border: 1px solid lightgrey;
+  border-radius: 4px;
+  padding: 2px 8px 2px 8px;
+}
+
+li {
+  list-style: none;
+  padding-left: 12px;
 }
 </style>
