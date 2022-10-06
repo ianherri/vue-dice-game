@@ -1,238 +1,219 @@
 import { ref } from 'vue'
-import {
-  scoreFiveKind,
-  scoreFourKind,
-  scoreFullHouse,
-  scoreLargeStraight,
-  scoreSmallStraight,
-  scoreThreeKind,
-  scoreOne,
-  scoreTwo,
-  scoreThree,
-  scoreFour,
-  scoreFive,
-  scoreSix,
-  scoreChance,
-} from './utilities'
+import { scoreMap, User, Game, Die, changeActiveUser } from './utilities'
+import axios from 'axios'
 
-import router from '../router/index'
-// these are the dice used
+axios.defaults.withCredentials = true
 
-const game = ref([])
+const message = ref('')
+const games = ref([])
+const game = ref()
+const loading = ref(true)
+const activeUserData = ref()
+const userData = ref()
 
-const initGame = ref(true)
+// takes in a userId and starts a new game with a single user
 
-const dice = ref([
-  { id: 1, val: 1, selected: false },
-  { id: 2, val: 1, selected: false },
-  { id: 3, val: 1, selected: false },
-  { id: 4, val: 1, selected: false },
-  { id: 5, val: 1, selected: false },
-])
+async function startGame(userId) {
+  // check for non-empty list of non-empty values
+  const user = new User(userId)
+  // set user active who started the game
+  user.active = true
+  let dice = [0, 0, 0, 0, 0]
+  const game = ref(new Game([], []))
 
-const rolls = ref(0)
+  game.value.users.push(user)
 
-const scoreSubmitting = ref(false)
+  game.value.dice = dice.map(() => {
+    return new Die(Math.floor(Math.random() * 6) + 1, false)
+  })
 
-const scoreOptions = ref([])
-
-function resetDice() {
-  dice.value = dice.value.map((die) => ({ ...die, val: 'x', selected: false }))
-  rolls.value = 0
-}
-
-function startGame(players) {
-  const userTemp = {
-    userId: '',
-    userName: '',
-    active: true,
-    score: [
-      { id: 0, name: 'ones', score: 0, submitted: false, getScore: scoreOne },
-      { id: 1, name: 'twos', score: 0, submitted: false, getScore: scoreTwo },
-      {
-        id: 2,
-        name: 'threes',
-        score: 0,
-        submitted: false,
-        getScore: scoreThree,
-      },
-      { id: 3, name: 'fours', score: 0, submitted: false, getScore: scoreFour },
-      { id: 4, name: 'fives', score: 0, submitted: false, getScore: scoreFive },
-      { id: 5, name: 'sixes', score: 0, submitted: false, getScore: scoreSix },
-      {
-        id: 6,
-        name: 'three of a kind',
-        score: 0,
-        submitted: false,
-        getScore: scoreThreeKind,
-      },
-      {
-        id: 7,
-        name: 'four of a kind',
-        score: 0,
-        submitted: false,
-        getScore: scoreFourKind,
-      },
-      {
-        id: 8,
-        name: 'fullhouse',
-        score: 0,
-        submitted: false,
-        getScore: scoreFullHouse,
-      },
-      {
-        id: 9,
-        name: 'small straight',
-        score: 0,
-        submitted: false,
-        getScore: scoreSmallStraight,
-      },
-      {
-        id: 10,
-        name: 'large straight',
-        score: 0,
-        submitted: false,
-        getScore: scoreLargeStraight,
-      },
-      {
-        id: 11,
-        name: 'yahtzee',
-        score: 0,
-        submitted: false,
-        getScore: scoreFiveKind,
-      },
-      {
-        id: 12,
-        name: 'chance',
-        score: 0,
-        submitted: false,
-        getScore: scoreChance,
-      },
-    ],
-  }
-  console.log(players)
-  for (let i = 0; i < players.length; i++) {
-    const randId = Math.floor(Math.random() * 1000000)
-    game.value.push({
-      ...userTemp,
-      userId: randId,
-      active: true,
-      userName: players[i],
+  const response = await axios
+    .post('http://localhost:3000/game/new', game.value)
+    .catch((error) => {
+      message.value = error
     })
+  if (response) {
+    game.value.id = response.data
   }
-  initGame.value = false
-
-  game.value[0].active = true
-
-  resetDice()
-
-  router.push('/game')
 }
 
-function selectDie(id) {
-  dice.value = dice.value.map((die) => {
-    if (die.id === id) {
-      return { ...die, selected: !die.selected }
+// takes in a userId and gameId and adds player to game
+// but only if the game hasn't gone past 1 turn yet?
+// alternatively... in submit score, I check for the number of turns people have gne
+// and if someone needs to catch up, I let them go until they catch up
+async function joinGame(userId, gameId) {
+  loading.value = true
+  // todo, set active to false
+  const user = new User(userId)
+  const request = { user: user, gameId: gameId }
+  const alreadyJoined = await getSingleGameForUser(userId, gameId)
+  if (!alreadyJoined) {
+    const response = await axios
+      .post('http://localhost:3000/game/join', request)
+      .catch((error) => {
+        message.value = error
+      })
+    if (response) {
+      console.log(response)
+      loading.value = false
+    }
+  }
+  // game.value.users.push(new ScoreCard(userId))
+  loading.value = false
+  console.log(userId, gameId)
+}
+
+// retrieves all games for single userId and stores them to the games state variable
+async function getAllGamesForUser() {
+  const response = await axios
+    .get('http://localhost:3000/game/all/user')
+    .catch((error) => {
+      message.value = error
+    })
+  if (response) {
+    games.value = response.data
+  }
+}
+
+// returns all games
+async function getAllGames() {
+  const response = await axios
+    .get('http://localhost:3000/game/all')
+    .catch((error) => {
+      message.value = error
+    })
+  if (response) {
+    games.value = response.data
+  }
+}
+
+async function getSingleGameForUser(gameId, userId) {
+  loading.value = true
+  // returns all games a user is in
+  const response = await axios
+    .get('http://localhost:3000/game/all/user')
+    .catch((error) => {
+      message.value = error
+    })
+  if (response) {
+    if (response.data.length === 0) {
+      message.value =
+        'sorry, you are not a part of this game, go back to your profile no data on response'
+      console.log(message.value)
+      loading.value = false
+    }
+    // this isn't working
+    else if (response.data.map((game) => game._id).includes(gameId)) {
+      game.value = response.data.filter((game) => game._id === gameId)[0]
+      activeUserData.value = game.value.users.filter((user) => user.active)[0]
+      userData.value = game.value.users.filter(
+        (user) => user.userId === userId
+      )[0]
     } else {
-      return { ...die }
+      message.value =
+        'sorry, you are not a part of this game, go back to your profile not game'
+      loading.value = false
+    }
+  }
+  loading.value = false
+}
+
+function selectDie(dieId) {
+  game.value.dice.forEach((die) => {
+    if (die.id === dieId) {
+      die.selected = !die.selected
     }
   })
 }
 
-function closeScore() {
-  scoreSubmitting.value = false
+// needs to:
+// make sure the active user it clicking it
+function rollDice() {
+  /* const activeUserId = activeUserData.value.userId
+  if (!(activeUserId === userId)) {
+    return
+  } */
+  game.value.dice.forEach((die) => {
+    if (!die.selected) {
+      die.value = Math.floor(Math.random() * 6) + 1
+    }
+  })
 }
 
-function rollDice() {
-  scoreSubmitting.value = false
-  if (rolls.value < 3) {
-    dice.value = dice.value.map((die) => {
-      const randomInt = Math.floor(Math.random() * 6) + 1
-      if (!die.selected) {
-        return { ...die, val: randomInt }
-      } else {
-        return { ...die }
-      }
-    })
-    rolls.value += 1
-  } else {
+// needs to:
+// make sure active user is clicking it -> DONE
+// calculate possible scores
+// send score to backend
+// change active user -> DONE
+// reset dice and turns counter
+async function submitTurn(userId) {
+  const users = game.value.users
+  // const gameId = game.value._id
+  const activeUserId = activeUserData.value.userId
+
+  if (!(activeUserId === userId)) {
     return
   }
-}
 
-function submitTurn(userId) {
-  scoreSubmitting.value = true
-  const result = dice.value.map((elem) => elem.val)
-  const activeUser = game.value.filter((user) => user.userId === userId)[0]
-
-  scoreOptions.value = activeUser.score.map((elem) => {
-    if (!elem.submitted) {
-      return {
-        ...elem,
-        score: elem.getScore(result),
-      }
-    } else {
-      return { ...elem }
+  activeUserData.value.scoreCard.forEach((score) => {
+    if (!score.staged && !score.submitted) {
+      score.score = 0
     }
-  })
-}
-
-// function that will be applied to each score option
-// needs to know it's own score id I think
-
-function submitScore(id, userId) {
-  console.log(userId)
-  scoreSubmitting.value = false
-  const chosenScore = scoreOptions.value.filter((option) => option.id === id)[0]
-
-  const activeUser = game.value.filter((user) => user.userId === userId)[0]
-
-  const activeUserIndex = game.value.findIndex((user) => user.userId === userId)
-
-  const numPlayers = game.value.length
-
-  // mutate the active users scoreboard
-  const userScoreUpdate = activeUser.score.map((prevScore) => {
-    if (prevScore.id === chosenScore.id) {
-      return { ...prevScore, score: chosenScore.score, submitted: true }
-    } else {
-      return { ...prevScore }
-    }
-  })
-  // insert the users updated scoreboard into the overall game object
-  // and set their active status to false
-  game.value = game.value.map((userGame) => {
-    if (userGame.userId === userId) {
-      return { ...userGame, score: userScoreUpdate, active: false }
-    } else {
-      return { ...userGame }
+    if (score.staged) {
+      score.submitted = true
+      score.staged = false
     }
   })
 
-  // set next active player
-  // if we are on the final player go to the start
-  if (activeUserIndex === numPlayers - 1) {
-    game.value[0].active = true
-  } else {
-    game.value[activeUserIndex + 1].active = true
+  changeActiveUser(users, activeUserId)
+
+  const response = await axios
+    .post('http://localhost:3000/game/update', game.value)
+    .catch((error) => {
+      message.value = error
+    })
+
+  if (response) {
+    console.log(response.data)
   }
+}
 
-  resetDice()
+const calculatePossibleScores = () => {
+  const dice = game.value.dice.map((die) => die.value)
+
+  activeUserData.value.scoreCard.forEach((score) => {
+    if (!score.submitted) {
+      const calc = scoreMap[score.id].getScore(dice)
+      score.score = calc
+    }
+  })
+}
+
+function selectScoreForSubmission(scoreId) {
+  activeUserData.value.scoreCard.forEach((score) => {
+    if (score.id === scoreId) {
+      score.staged = !score.staged
+    }
+  })
 }
 
 export default function useState() {
   return {
-    dice,
-    rolls,
-    selectDie,
-    rollDice,
-    submitTurn,
-    scoreOptions,
-    scoreSubmitting,
-    closeScore,
-    submitScore,
-    game,
-    initGame,
     startGame,
+    games,
+    game,
+    rollDice,
+    joinGame,
+    getAllGamesForUser,
+    getSingleGameForUser,
+    loading,
+    selectDie,
+    submitTurn,
+    calculatePossibleScores,
+    activeUserData,
+    userData,
+    selectScoreForSubmission,
+    getAllGames,
+    message,
   }
 }

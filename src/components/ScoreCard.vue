@@ -1,28 +1,60 @@
 <template>
-  <div>{{ props.user.userName }}: {{ score }}</div>
-  <button @click.prevent="handleShowScoreCard">show scorecard</button>
-  <div v-if="showScoreCard">
-    <div>showing!</div>
+  <div v-if="!loading">
+    <div class="grid grid-cols-1 gap-2">
+      <div class="grid grid-cols-3 gap-2 font-semibold text-l">
+        <div>Name</div>
+        <div>Score</div>
+        <div></div>
+      </div>
+      <div
+        class="grid grid-cols-3 gap-2"
+        v-for="score in userData.scoreCard"
+        :key="score.id"
+      >
+        <div class="mr-4" :class="scoreActiveStyles(score)">
+          {{ score.name }}
+        </div>
+        <div>{{ score.score }}</div>
+        <div>
+          <button
+            class="rounded bg-rose-300 hover:bg-rose-500 px-2 disabled:bg-slate-50 disabled:text-slate-300"
+            :disabled="score.submitted"
+            @click.prevent="handleSelectScore(score.id)"
+          >
+            select
+          </button>
+        </div>
+      </div>
+      <button
+        class="rounded bg-slate-300 hover:bg-rose-500 px-2 mt-4"
+        @click.prevent="handleSubmitScore"
+      >
+        Submit score
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps, computed, ref } from 'vue'
+import useState from '../composable/state'
 
-const showScoreCard = ref(false)
+const { loading, userData, selectScoreForSubmission, submitTurn } = useState()
 
-const props = defineProps({
-  user: Object,
-})
+function handleSelectScore(scoreId) {
+  selectScoreForSubmission(scoreId)
+}
 
-const score = computed(() => {
-  return props.user.score
-    .map((n) => n.score)
-    .reduce((value, prevValue) => value + prevValue, 0)
-})
+function handleSubmitScore() {
+  submitTurn(userData.value.userId)
+}
 
-function handleShowScoreCard() {
-  showScoreCard.value = !showScoreCard.value
+function scoreActiveStyles(score) {
+  if (score.submitted) {
+    return 'line-through'
+  }
+  if (score.staged) {
+    return 'underline'
+  } else return ''
 }
 </script>
 
