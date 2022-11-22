@@ -10,6 +10,7 @@ const game = ref()
 const loading = ref(true)
 const activeUserData = ref()
 const userData = ref()
+const rolls = ref(0)
 
 // takes in a userId and starts a new game with a single user
 
@@ -140,6 +141,13 @@ function rollDice() {
   })
 }
 
+function resetDice() {
+  game.value.dice.map((die) => {
+    die.selected = false
+    die.value = 0
+  })
+}
+
 // needs to:
 // make sure active user is clicking it -> DONE
 // calculate possible scores
@@ -176,6 +184,9 @@ async function submitTurn(userId) {
   if (response) {
     console.log(response.data)
   }
+
+  resetDice()
+  rolls.value = 0
 }
 
 const calculatePossibleScores = () => {
@@ -215,5 +226,7 @@ export default function useState() {
     selectScoreForSubmission,
     getAllGames,
     message,
+    resetDice,
+    rolls,
   }
 }

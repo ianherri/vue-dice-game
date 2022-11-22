@@ -129,6 +129,8 @@ module.exports = {
     backdropSepia: ({ theme }) => theme('sepia'),
     backgroundColor: ({ theme }) => theme('colors'),
     backgroundImage: {
+      hero: "url('https://images.unsplash.com/photo-1620094946632-fb54e80eb152?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3270&q=80')",
+      heroalt: "url('/assets/odyssesusbg.png')",
       none: 'none',
       'gradient-to-t': 'linear-gradient(to top, var(--tw-gradient-stops))',
       'gradient-to-tr':

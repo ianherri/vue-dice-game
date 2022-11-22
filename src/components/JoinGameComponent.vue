@@ -1,19 +1,19 @@
 <template>
   <div
-    class="rounded py-6 px-5 cursor-pointer"
+    class="py-6 px-5 cursor-pointer"
     :class="
       gameMember
-        ? 'bg-green-100 hover:bg-green-300'
-        : 'bg-amber-100 hover:bg-amber-300'
+        ? 'rounded-md text-white border border border-white hover:bg-white/10'
+        : 'rounded-md text-white border border border-amber-500 hover:bg-white/10'
     "
     @click.prevent="handlePlayOrJoinGame"
   >
     <div class="flex flex-col gap-2">
       <h2 class="text-base font-bold">
-        {{ gameMember ? 'play this game' : 'join this game' }}
+        {{ gameMember ? 'Play Game' : 'Join Game' }}
       </h2>
       <div>Active players: {{ props.game.users.length }}</div>
-      <div class="text-xs font-light">{{ formattedDate }}</div>
+      <div class="text-xs font-light">Started: {{ formattedDate }}</div>
     </div>
   </div>
 </template>

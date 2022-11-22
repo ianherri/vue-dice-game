@@ -1,7 +1,7 @@
 <template>
   <div
-    :style="style"
-    class="rounded-xl px-4 py-2"
+    :class="style"
+    class="rounded-2xl px-4 py-2 text-white outline-white"
     @click.prevent="selectDie(props.id)"
   >
     {{ props.value }}
@@ -25,10 +25,13 @@ const props = defineProps({
   id: Number,
 })
 
-const style = computed(() => ({
-  backgroundColor: props.selected ? '#ffd7a3' : '#f08080',
-  outline: props.selected ? '2px solid green' : '',
-}))
+const style = computed(() => {
+  if (props.selected) {
+    return 'bg-white/10 outline-2'
+  } else {
+    return 'bg-white/30 outline-0'
+  }
+})
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

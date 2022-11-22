@@ -1,12 +1,12 @@
 <template>
   <div
-    class="sticky flex flex-row gap-2 bg-white py-2 px-4 rounded w-max border border-slate-100"
+    class="sticky flex flex-row mx-2 backdrop-blur-md bg-white/30 py-2 px-4 rounded shadow self-stretch text-white gap-2"
   >
     <router-link :to="home"> Home </router-link>
-    <div v-if="loggedIn">
-      <router-link :to="profile"> Profile </router-link>
-      <router-link :to="logout"> Logout </router-link>
-    </div>
+    <router-link v-if="loggedIn" :to="profile"> Profile </router-link>
+    <router-link v-if="loggedIn" class="ml-auto" :to="logout">
+      Logout
+    </router-link>
   </div>
 </template>
 
